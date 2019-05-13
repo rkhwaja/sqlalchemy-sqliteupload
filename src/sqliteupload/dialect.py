@@ -1,3 +1,4 @@
+from contextlib import suppress
 from hashlib import md5
 from io import BytesIO
 from logging import debug, info
@@ -9,7 +10,7 @@ from fs.errors import ResourceNotFound
 from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.sqlite.pysqlite import SQLiteDialect_pysqlite
 
-def _hash_of_bytes(self, bytes):
+def _hash_of_bytes(bytes_):
 	hash_ = md5()
 	hash_.update(bytes_)
 	return hash_.hexdigest()
@@ -57,7 +58,8 @@ class SQLiteUploadDialect(SQLiteDialect_pysqlite):
 			debug(f"Loaded remote DB from {self._fs}:{self._remoteFilename}")
 		except ResourceNotFound:
 			debug(f"No file at {self._fs}:{self._remoteFilename}, deleting {self._localPath}")
-			remove(self._localPath)
+			with suppress(FileNotFoundError):
+				remove(self._localPath)
 			self._localHash = None
 
 urlScheme = "sqliteupload"

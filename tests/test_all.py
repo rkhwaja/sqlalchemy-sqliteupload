@@ -1,5 +1,6 @@
 from contextlib import contextmanager, suppress
 from logging import info
+from os import getcwd
 
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -49,7 +50,7 @@ def test_create_dialect():
 
 	RegisterDialect()
 	scheme = "osfs"
-	remoteDirectory = "/Users/rehan/src/sqliteupload"
+	remoteDirectory = getcwd()
 	remoteFilename = "remote.db"
 	databaseUrl = f"sqliteupload:///{remoteDirectory}/{remoteFilename}?fs={scheme}"
 	with suppress(ResourceNotFound):
