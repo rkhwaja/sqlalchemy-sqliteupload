@@ -1,16 +1,16 @@
 from contextlib import contextmanager, suppress
 from logging import info
-from os import getcwd
+from os import close
+from os.path import basename, dirname
+from tempfile import mkstemp
 
+from fs import open_fs
+from fs.errors import ResourceNotFound
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from sqliteupload import __version__
 from sqliteupload.dialect import RegisterDialect
-
-def test_version():
-	assert __version__ == '0.1.0'
 
 Base = declarative_base()
 
@@ -30,28 +30,13 @@ def _Session(engine):
 	finally:
 		session.close()
 
-def test_create():
-	databaseUrl = "sqlite:///:memory:"
-	databaseUrl = "sqlite:///test.db"
-	engine = create_engine(databaseUrl, connect_args={})
-	Base.metadata.create_all(engine)
-
-	with _Session(engine) as session:
-		session.add(_ExampleTable(name="name1"))
-		session.commit()
-
-	with _Session(engine) as session:
-		entries = session.query(_ExampleTable).all()
-		assert len(entries) == 1, "Should be 1 entry"
-
 def test_create_dialect():
-	from fs import open_fs
-	from fs.errors import ResourceNotFound
-
 	RegisterDialect()
 	scheme = "osfs"
-	remoteDirectory = getcwd()
-	remoteFilename = "remote.db"
+	handle, remotePath = mkstemp()
+	close(handle)
+	remoteDirectory = dirname(remotePath)
+	remoteFilename = basename(remotePath)
 	databaseUrl = f"sqliteupload:///{remoteDirectory}/{remoteFilename}?fs={scheme}"
 	with suppress(ResourceNotFound):
 		open_fs(f"{scheme}://{remoteDirectory}").remove(remoteFilename)

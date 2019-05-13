@@ -2,8 +2,8 @@ from contextlib import suppress
 from hashlib import md5
 from io import BytesIO
 from logging import debug, info
-from os import remove
-from os.path import abspath
+from os import close, remove
+from tempfile import mkstemp
 
 from fs import open_fs
 from fs.errors import ResourceNotFound
@@ -19,7 +19,8 @@ class SQLiteUploadDialect(SQLiteDialect_pysqlite):
 
 	def __init__(self, *args, **kw):
 		super().__init__(*args, **kw)
-		self._localPath = abspath("local.db")
+		handle, self._localPath = mkstemp()
+		close(handle)
 		self._localHash = None
 		debug(f"localPath: {self._localPath}")
 
