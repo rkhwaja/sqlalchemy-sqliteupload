@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "sqlalchemy-sqliteupload"
 version = "0.1.0"
-description = ""
+description = "Persists an sqlite database to a pyfilesystem location via SQLAlchemy"
 authors = ["Rehan Khwaja <rehan@khwaja.name>"]
 
 [tool.poetry.dependencies]
