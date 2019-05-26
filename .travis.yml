@@ -6,7 +6,6 @@ dist: xenial
 install:
 - pip install fs sqlalchemy pytest python-coveralls coverage
 script:
-- pytest
 - coverage run --source . -m pytest
 - coverage report --omit */Lib/*,tests/*
 - coverage html --omit */Lib/*,tests/*
