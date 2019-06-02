@@ -1,7 +1,6 @@
 from contextlib import suppress
 from hashlib import md5
-from io import BytesIO
-from logging import debug, info
+from logging import debug
 from os import close, remove
 from tempfile import mkstemp
 
@@ -15,7 +14,7 @@ def _hash_of_bytes(bytes_):
 	hash_.update(bytes_)
 	return hash_.hexdigest()
 
-class SQLiteUploadDialect(SQLiteDialect_pysqlite):
+class SQLiteUploadDialect(SQLiteDialect_pysqlite): # pylint: disable=abstract-method
 
 	def __init__(self, *args, **kw):
 		super().__init__(*args, **kw)
@@ -23,8 +22,10 @@ class SQLiteUploadDialect(SQLiteDialect_pysqlite):
 		close(handle)
 		self._localHash = None
 		debug(f"localPath: {self._localPath}")
+		self._remoteFilename = None
+		self._fs = None
 
-	def close(self, *args, **kwargs):
+	def close(self, *args, **kwargs): # pylint: disable=unused-argument
 		with open(self._localPath, "rb") as f:
 			bytes_ = f.read()
 
@@ -40,8 +41,8 @@ class SQLiteUploadDialect(SQLiteDialect_pysqlite):
 		self._load_remote_db(uploadUrl)
 		return super().connect(self._localPath, **kw)
 
-	def do_close(self, *args, **kw):
-		out = super().do_close(*args, **kw)
+	def do_close(self, dbapi_connection):
+		out = super().do_close(dbapi_connection)
 		self.close()
 		return out
 
@@ -50,7 +51,7 @@ class SQLiteUploadDialect(SQLiteDialect_pysqlite):
 		fsurl = remotePath[:lastSeparator]
 		self._remoteFilename = remotePath[lastSeparator + 1:]
 		self._fs = open_fs(fsurl)
-		
+
 		try:
 			remoteBytes = self._fs.readbytes(self._remoteFilename)
 			with open(self._localPath, "wb") as localFile: # truncate any existing files
@@ -63,7 +64,8 @@ class SQLiteUploadDialect(SQLiteDialect_pysqlite):
 				remove(self._localPath)
 			self._localHash = None
 
-urlScheme = "sqliteupload"
-
 def RegisterDialect():
-	registry.register(urlScheme, "sqliteupload.dialect", SQLiteUploadDialect.__name__)
+	registry.register(
+		name="sqliteupload",
+		modulepath="sqliteupload.dialect",
+		objname=SQLiteUploadDialect.__name__)
